@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thursday Coed League</title>
+<meta name="theme-color" content="#145c38">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TOCA League">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+
+/* Layout: sticky scoreboard header + tabbed single column, max 760px */
+:root{
+  --bg:#f3f6f2; --surface:#ffffff; --line:#dbe3dc; --fg:#14231a; --muted:#5b6b60;
+  --pitch:#145c38; --pitch-ink:#ffffff; --accent:#e8780c; --win:#1d7a45; --loss:#b3392f; --tie:#7a6a1d;
+  --mine:#fff4e6;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1712; --surface:#17221b; --line:#26352b; --fg:#e7efe9; --muted:#93a598;
+  --pitch:#0d3f27; --pitch-ink:#eaf5ee; --accent:#f59a3c; --win:#4cc27e; --loss:#ef7a70; --tie:#d8c46a; --mine:#2b2216; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1712; --surface:#17221b; --line:#26352b; --fg:#e7efe9; --muted:#93a598;
+  --pitch:#0d3f27; --pitch-ink:#eaf5ee; --accent:#f59a3c; --win:#4cc27e; --loss:#ef7a70; --tie:#d8c46a; --mine:#2b2216; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--pitch)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--pitch);color:var(--pitch-ink);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+header .wrap{padding-block:14px 0;display:grid;gap:10px}
+.eyebrow{font-family:var(--display);letter-spacing:.14em;text-transform:uppercase;font-size:12px;opacity:.8}
+h1{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;margin:0;text-wrap:balance;text-transform:uppercase}
+h1 span{color:var(--accent)}
+nav{display:flex;gap:4px}
+nav button{flex:1;font:700 15px var(--display);letter-spacing:.08em;text-transform:uppercase;background:none;border:0;color:inherit;opacity:.7;padding:10px 4px 12px;border-bottom:3px solid transparent;cursor:pointer}
+nav button[aria-selected="true"]{opacity:1;border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main .wrap{padding-block:18px 48px;display:grid;gap:18px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+label.small{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+select,input[type=number]{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.week{display:grid;gap:8px}
+.week h2{font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.06em;margin:0;display:flex;gap:10px;align-items:baseline}
+.week h2 small{font-family:var(--body);font-size:12px;color:var(--muted);letter-spacing:0;text-transform:none}
+.tag{font:700 11px var(--display);letter-spacing:.1em;text-transform:uppercase;background:var(--accent);color:#fff;padding:2px 7px;border-radius:3px}
+.game{background:var(--surface);border:1px solid var(--line);border-radius:8px;display:grid;grid-template-columns:62px 1fr;overflow:hidden}
+.game.mine{background:var(--mine)}
+.time{font-family:var(--display);font-weight:700;font-size:17px;display:grid;place-items:center;border-right:1px solid var(--line);color:var(--muted);font-variant-numeric:tabular-nums}
+.teams{padding:8px 12px;display:grid;gap:3px;min-width:0}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.row .nm{min-width:0;overflow-wrap:anywhere}
+.row .nm small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-left:6px}
+.row.won .nm{font-weight:600}
+.sc{font-family:var(--display);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;min-width:1.4em;text-align:right}
+.row.lost .sc,.row.lost .nm{color:var(--muted)}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);align-items:center;padding-top:2px}
+.meta a{color:var(--accent)}
+.edit{font:600 12px var(--body);color:var(--accent);background:none;border:1px solid var(--accent);border-radius:4px;padding:2px 8px;cursor:pointer}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;min-width:520px}
+th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:700 12px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+td.t,th.t{text-align:left;white-space:normal;min-width:150px}
+td.rk{color:var(--muted);width:28px}
+td.pts{font-family:var(--display);font-weight:800;font-size:17px}
+tr.mine td{background:var(--mine)}
+tbody tr:last-child td{border-bottom:0}
+.form{display:inline-flex;gap:3px}
+.form i{font:700 10px var(--display);font-style:normal;width:17px;height:17px;display:grid;place-items:center;border-radius:3px;color:#fff}
+.form .W{background:var(--win)}.form .L{background:var(--loss)}.form .T{background:var(--tie)}
+.note{font-size:13px;color:var(--muted);max-width:65ch}
+.leaders{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.leader{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+.leader b{display:block;font:800 26px var(--display)}
+.leader span{font-size:13px;color:var(--muted)}
+.admin{font-size:12px;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);width:min(440px,calc(100% - 32px));padding:18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h3{font-family:var(--display);text-transform:uppercase;margin:0 0 12px;font-size:20px}
+.scoregrid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.scoregrid input{width:100%;font-size:20px;text-align:center}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.btn{font:700 14px var(--display);letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:9px 14px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.btn.primary{background:var(--pitch);color:var(--pitch-ink);border-color:var(--pitch)}
+.btn.danger{color:var(--loss)}
+.status{font-size:13px;color:var(--muted);min-height:1.2em;margin-top:8px}
+.photo{margin-top:12px;display:grid;gap:8px}
+.photo img{border-radius:6px;max-height:180px;object-fit:contain}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.login{display:grid;place-items:center;width:30px;height:30px;color:var(--pitch-ink);background:transparent;border:1px solid currentColor;border-radius:50%;opacity:.6;cursor:pointer;padding:0}
+.login.on{opacity:1;background:var(--accent);border-color:var(--accent)}
+.step{display:flex;gap:6px;align-items:center}
+.step button{width:40px;height:40px;font:800 22px var(--display);border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.methods{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.method{border:1px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:6px;align-content:start}
+.method b{font-family:var(--display);text-transform:uppercase;letter-spacing:.05em}
+.banner{background:var(--mine);border:1px dashed var(--accent);border-radius:8px;padding:10px 12px;font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px}
+.panel h3{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:16px;margin:0}
+.pend{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:10px}
+.pend img{width:64px;height:64px;object-fit:cover;border-radius:4px;background:var(--line)}
+.pend .acts{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+.pill{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;background:var(--tie);color:#fff;padding:1px 6px;border-radius:3px}
+.chg{font-size:13px;max-height:220px;overflow:auto;display:grid;gap:4px}
+.chg div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding:3px 0}
+.field{display:grid;gap:4px;margin-bottom:10px}
+.field input{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="toprow"><div class="eyebrow">TOCA Novi East · Thurs Coed Open · C Rec</div>
+    <button class="login" id="loginBtn" aria-label="Admin login" title="Admin login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div>
+  <h1>Winter <span>Session</span> 2026</h1>
+  <nav role="tablist">
+    <button role="tab" data-tab="schedule">Schedule</button>
+    <button role="tab" data-tab="standings">Standings</button>
+    <button role="tab" data-tab="stats">Stats</button>
+  </nav>
+</div></header>
+<main><div class="wrap">
+  <div class="bar"><label class="small" for="myteam">My team <select id="myteam"><option value="">All teams</option></select></label><span class="admin" id="loadNote">Loading scores…</span></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="panel" id="adminPanel" hidden>
+    <h3>Update scores</h3>
+    <div class="methods">
+      <div class="method"><b>1 · Manual</b><span class="note">Tap Enter score on any game below and use − / +.</span></div>
+      <div class="method"><b>2 · Photo</b><span class="note">Snap the score sheet. Teams and score are read for you to confirm.</span><label class="btn" for="scan" style="cursor:pointer;text-align:center">Scan score sheet<input type="file" id="scan" accept="image/*" hidden></label></div>
+      <div class="method"><b>3 · Spreadsheet</b><span class="note">.xlsx or .csv with Week, Home, Away, Home Score, Away Score.</span><label class="btn" for="xls" style="cursor:pointer;text-align:center">Upload spreadsheet<input type="file" id="xls" accept=".xlsx,.xls,.csv" hidden></label></div>
+    </div>
+    <div class="status" id="scanStatus"></div>
+  </div>
+  <section id="view-schedule"></section>
+  <section id="view-standings" hidden></section>
+  <section id="view-stats" hidden></section>
+</div></main>
+
+<dialog id="dlg"><form id="dlgForm">
+  <h3>Enter result</h3>
+  <div class="scoregrid">
+    <label for="hs" id="hsLabel">Home</label><div class="step"><button type="button" data-st="hs" data-d="-1">−</button><input type="number" min="0" max="99" id="hs" inputmode="numeric"><button type="button" data-st="hs" data-d="1">+</button></div>
+    <label for="as" id="asLabel">Away</label><div class="step"><button type="button" data-st="as" data-d="-1">−</button><input type="number" min="0" max="99" id="as" inputmode="numeric"><button type="button" data-st="as" data-d="1">+</button></div>
+  </div>
+  <div class="photo"><label class="small" for="sheet">Score sheet photo (optional)</label><input type="file" id="sheet" accept="image/*"><img id="sheetPrev" alt="Score sheet preview" hidden></div>
+  <div class="status" id="dlgStatus"></div>
+  <div class="actions"><button type="button" class="btn danger" id="clearRes">Clear result</button><button type="button" class="btn" id="cancel">Cancel</button><button class="btn primary" id="save">Save</button></div>
+</form></dialog>
+
+<dialog id="loginDlg"><form id="loginForm">
+  <h3>Admin login</h3>
+  <div class="field"><label for="un">Username</label><input id="un" autocomplete="username" autocapitalize="none"></div>
+  <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>
+  <div class="status" id="loginStatus"></div>
+  <div class="actions"><button type="button" class="btn" id="loginCancel">Cancel</button><button class="btn primary">Log in</button></div>
+</form></dialog>
+
+<dialog id="impDlg"><form id="impForm">
+  <h3>Spreadsheet changes</h3>
+  <div class="chg" id="impList"></div>
+  <div class="status" id="impStatus"></div>
+  <div class="actions"><button type="button" class="btn" id="impCancel">Cancel</button><button class="btn primary" id="impApply">Apply updates</button></div>
+</form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
