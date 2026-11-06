@@ -75,7 +75,7 @@ function renderTeamStats(){
     ${card('Games left',mine.length-done.length,`of ${mine.length} this session`)}
   </div>
   <div class="results"><h3>Results</h3>${
-    res.map(r=>{const k=r.m>0?'W':r.m<0?'L':'T';return `<div class="res"><span class="d">${md(r.g.game_date)}</span><span class="form"><i class="${k}">${k}</i></span><b>${r.f}–${r.a}</b></div>`}).join('')}</div>`;
+    res.map(r=>{const k=r.m>0?'W':r.m<0?'L':'T';return `<div class="res"><span class="d">${md(r.g.game_date)}</span><span class="op">${esc(T[r.opp])}</span><span class="form"><i class="${k}">${k}</i></span><b>${r.f}–${r.a}</b></div>`}).join('')}</div>`;
 }
 function renderTeamHead(){
   const h=$('#teamHead'); h.hidden=!MY; $('#teamClear').hidden=!MY; $('#teamBtn').classList.toggle('on',!!MY);
