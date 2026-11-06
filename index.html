@@ -135,6 +135,11 @@ dialog.sheet{width:min(460px,calc(100% - 24px));max-height:80vh;overflow:auto}
 .kpis span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .backall{justify-self:start;font:600 13px var(--body);color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
 main .wrap>*{min-width:0}
+[data-team]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+.tcard{display:grid;gap:12px}
+.tcard .tn{font:800 24px var(--display);text-transform:uppercase;line-height:1.1}
+.tcard .tn small{display:block;font:500 13px var(--body);text-transform:none;color:var(--muted);margin-top:2px}
+.res.up{grid-template-columns:44px 1fr auto}
 .week.past .game{opacity:.55;filter:grayscale(.6)}
 .week.past h2{color:var(--muted)}
 .done{font:700 11px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:1px 7px;border-radius:3px}
@@ -186,6 +191,11 @@ main .wrap>*{min-width:0}
   <section id="view-stats" hidden></section>
 </div></main>
 
+<dialog id="teamCard" class="sheet"><div class="tcard">
+  <div id="cardBody"></div>
+  <div class="actions"><button type="button" class="btn" id="cardClose">Close</button><button type="button" class="btn primary" id="cardFollow">Show in app</button></div>
+</div></dialog>
+
 <dialog id="teamDlg" class="sheet"><div>
   <h3>Pick a team</h3>
   <div class="teamlist" id="teamList"></div>
@@ -220,7 +230,7 @@ main .wrap>*{min-width:0}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
