@@ -27,8 +27,10 @@ function nextWeek(){ const now=new Date(); const g=GAMES.find(g=>new Date(g.game
 function renderSchedule(){
   const nw = nextWeek(); let html = '';
   const weeks = [...new Set(GAMES.map(g=>g.week))];
-  weeks.forEach(w => { const gs = GAMES.filter(g=>g.week===w && (!MY||g.home===MY||g.away===MY)); if(!gs.length) return;
-    html += `<div class="week"><h2>Week ${w} · Thu ${md(gs[0].game_date)}${w===nw?' <span class="tag">Up next</span>':''}<small>${MY?'':gs.length+' games'}</small></h2>`;
+  weeks.forEach(w => { const all = GAMES.filter(g=>g.week===w), gs = all.filter(g=>!MY||g.home===MY||g.away===MY);
+    const past = w < nw, cur = w === nw;
+    html += `<div class="week${past?' past':''}" id="wk${w}"><h2>Week ${w} · Thu ${md(all[0].game_date)}${cur?' <span class="tag">This week</span>':''}${past?' <span class="done">Final</span>':''}<small>${MY?'':gs.length+' games'}</small></h2>`;
+    if(!gs.length) html += `<div class="bye">Bye week. ${esc(T[MY])} doesn't play.</div>`;
     gs.forEach(g => { const r = has(g), mine = MY&&(g.home===MY||g.away===MY);
       const cls = side => !r||g.home_score===g.away_score ? '' : ((side==='h')===(g.home_score>g.away_score)?'won':'lost');
       html += `<div class="game${mine?' mine':''}"><div class="time">${esc(g.game_time.replace(' PM',''))}<br><small style="font-size:11px">PM</small></div><div class="teams">
@@ -37,7 +39,16 @@ function renderSchedule(){
         ${g.photo_url||ADMIN?`<div class="meta">${g.photo_url?`<a href="${esc(g.photo_url)}" target="_blank" rel="noopener">Score sheet</a>`:''}${r?'<span>Final</span>':''}${ADMIN?`<button class="edit" data-g="${g.id}">${r?'Edit score':'Enter score'}</button>`:''}</div>`:''}
       </div></div>` });
     html += '</div>' });
-  $('#view-schedule').innerHTML = html || '<p class="note">No games for this team.</p>';
+  $('#view-schedule').innerHTML = html || '<p class="note">No games scheduled.</p>';
+}
+// Jump the schedule to the current week; earlier weeks stay above, a scroll away
+let jumpPending = true;
+function jumpToCurrent(){
+  if(!jumpPending || $('#view-schedule').hidden || !GAMES.length) return;
+  jumpPending = false;
+  const el = $('#wk'+nextWeek()); if(!el) return;
+  const head = document.querySelector('header').getBoundingClientRect().height;
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - head - 12, behavior: 'auto' });
 }
 function renderStandings(){
   const rows = standings();
@@ -63,8 +74,8 @@ function renderTeamStats(){
     ${next?card('Next game',md(next.game_date)+' · '+esc(next.game_time.replace(' PM','pm')),'vs '+esc(T[next.home===MY?next.away:next.home])):''}
     ${card('Games left',mine.length-done.length,`of ${mine.length} this session`)}
   </div>
-  <div class="tablewrap"><table><thead><tr><th>Date</th><th class="t">Opponent</th><th>Result</th><th>Score</th></tr></thead><tbody>${
-    res.map(r=>`<tr><td>${md(r.g.game_date)}</td><td class="t">${esc(T[r.opp])}</td><td><span class="form"><i class="${r.m>0?'W':r.m<0?'L':'T'}">${r.m>0?'W':r.m<0?'L':'T'}</i></span></td><td>${r.f}–${r.a}</td></tr>`).join('')}</tbody></table></div>`;
+  <div class="results"><h3>Results</h3>${
+    res.map(r=>{const k=r.m>0?'W':r.m<0?'L':'T';return `<div class="res"><span class="d">${md(r.g.game_date)}</span><span class="form"><i class="${k}">${k}</i></span><b>${r.f}–${r.a}</b></div>`}).join('')}</div>`;
 }
 function renderTeamHead(){
   const h=$('#teamHead'); h.hidden=!MY; $('#teamClear').hidden=!MY; $('#teamBtn').classList.toggle('on',!!MY);
@@ -91,13 +102,13 @@ function renderStats(){
     ${top((a,b)=>a.ga/a.gp-b.ga/b.gp,'Best defense',b=>(b.ga/b.gp).toFixed(1)+' GA/gm')}
     <div class="leader"><span>Biggest margin</span><b>${big.home_score}–${big.away_score}</b><span>${esc(T[big.home])} vs ${esc(T[big.away])}, ${md(big.game_date)}</span></div></div>`;
 }
-function render(){ renderTeamHead(); renderSchedule(); renderStandings(); renderStats(); $('#adminPanel').hidden=!ADMIN; $('#loginBtn').classList.toggle('on',ADMIN) }
+function render(){ renderTeamHead(); renderSchedule(); renderStandings(); renderStats(); requestAnimationFrame(jumpToCurrent); $('#adminPanel').hidden=!ADMIN; $('#loginBtn').classList.toggle('on',ADMIN) }
 
 function show(tab){ if(!['schedule','standings','stats'].includes(tab)) tab='schedule';
   document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   ['schedule','standings','stats'].forEach(t=>$('#view-'+t).hidden=t!==tab); ls.set('tab',tab) }
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.tab));
-function setTeam(k){ MY=k; ls.set('myteam',MY); $('#teamDlg').open&&$('#teamDlg').close(); render(); window.scrollTo(0,0) }
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{ show(b.dataset.tab); window.scrollTo(0,0); if(b.dataset.tab==='schedule'){ jumpPending=true; requestAnimationFrame(jumpToCurrent) } });
+function setTeam(k){ MY=k; ls.set('myteam',MY); $('#teamDlg').open&&$('#teamDlg').close(); jumpPending=true; window.scrollTo(0,0); render() }
 function openTeams(){
   const rows=standings(), rec=Object.fromEntries(rows.map((x,i)=>[x.k,`#${i+1} · ${x.w}-${x.l}-${x.t}`]));
   $('#teamList').innerHTML=`<button class="all${MY?'':' sel'}" data-k="">All teams<small>Whole league</small></button>`+
