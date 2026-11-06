@@ -113,13 +113,44 @@ dialog h3{font-family:var(--display);text-transform:uppercase;margin:0 0 12px;fo
 .field input{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+
+.titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.teampick{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 140px;justify-content:flex-end}
+.teambtn{display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:0;max-width:100%;flex:1 1 auto;font:700 14px var(--display);letter-spacing:.05em;text-transform:uppercase;color:var(--pitch-ink);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.45);border-radius:999px;padding:8px 14px;cursor:pointer}
+.teambtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.teambtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.teamclear{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.45);background:transparent;color:var(--pitch-ink);font:700 20px/1 var(--body);cursor:pointer}
+dialog.sheet{width:min(460px,calc(100% - 24px));max-height:80vh;overflow:auto}
+.teamlist{display:grid;gap:6px}
+.teamlist button{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;font:500 15px var(--body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px;cursor:pointer}
+.teamlist button small{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.teamlist button.sel{border-color:var(--accent);background:var(--mine);font-weight:700}
+.teamlist .all{font-weight:700}
+.teamhead{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:10px}
+.teamhead .tn{font:800 22px var(--display);text-transform:uppercase;line-height:1.1}
+.teamhead .tn small{display:block;font:500 13px var(--body);text-transform:none;color:var(--muted);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpis div{display:grid;gap:2px}
+.kpis b{font:800 22px var(--display);font-variant-numeric:tabular-nums}
+.kpis span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.backall{justify-self:start;font:600 13px var(--body);color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
+main .wrap>*{min-width:0}
+#view-stats{display:grid;gap:12px}
+#view-stats .leaders{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media (max-width:420px){.kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <header><div class="wrap">
   <div class="toprow"><div class="eyebrow">TOCA Novi East · Thurs Coed Open · C Rec</div>
     <button class="login" id="loginBtn" aria-label="Admin login" title="Admin login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div>
-  <h1>Winter <span>Session</span> 2026</h1>
+  <div class="titlerow">
+    <h1>Winter <span>Session</span> 2026</h1>
+    <div class="teampick">
+      <button class="teambtn" id="teamBtn" aria-haspopup="dialog"><span id="teamBtnLabel">All teams</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <button class="teamclear" id="teamClear" aria-label="Back to all teams" title="Back to all teams" hidden>×</button>
+    </div>
+  </div>
   <nav role="tablist">
     <button role="tab" data-tab="schedule">Schedule</button>
     <button role="tab" data-tab="standings">Standings</button>
@@ -127,7 +158,8 @@ dialog h3{font-family:var(--display);text-transform:uppercase;margin:0 0 12px;fo
   </nav>
 </div></header>
 <main><div class="wrap">
-  <div class="bar"><label class="small" for="myteam">My team <select id="myteam"><option value="">All teams</option></select></label><span class="admin" id="loadNote">Loading scores…</span></div>
+  <span class="admin" id="loadNote">Loading scores…</span>
+  <div class="teamhead" id="teamHead" hidden></div>
   <div class="banner" id="banner" hidden></div>
   <div class="panel" id="adminPanel" hidden>
     <h3>Update scores</h3>
@@ -142,6 +174,12 @@ dialog h3{font-family:var(--display);text-transform:uppercase;margin:0 0 12px;fo
   <section id="view-standings" hidden></section>
   <section id="view-stats" hidden></section>
 </div></main>
+
+<dialog id="teamDlg" class="sheet"><div>
+  <h3>Pick a team</h3>
+  <div class="teamlist" id="teamList"></div>
+  <div class="actions"><button type="button" class="btn" id="teamDlgClose">Close</button></div>
+</div></dialog>
 
 <dialog id="dlg"><form id="dlgForm">
   <h3>Enter result</h3>

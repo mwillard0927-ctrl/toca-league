@@ -45,7 +45,40 @@ function renderStandings(){
     rows.map((x,i)=>`<tr class="${x.k===MY?'mine':''}"><td class="rk">${i+1}</td><td class="t">${esc(T[x.k])}</td><td>${x.gp}</td><td>${x.w}</td><td>${x.l}</td><td>${x.t}</td><td>${x.gf}</td><td>${x.ga}</td><td>${x.gd>0?'+':''}${x.gd}</td><td class="pts">${x.pts}</td><td><span class="form">${x.form.slice(-5).map(f=>`<i class="${f}">${f}</i>`).join('')}</span></td></tr>`).join('')}</tbody></table></div>
     <p class="note">Win 3 pts, tie 1. Ranked by points, then goal difference, wins, goals for.</p>`;
 }
+function renderTeamStats(){
+  const rows=standings(), i=rows.findIndex(x=>x.k===MY), me=rows[i];
+  const mine=GAMES.filter(g=>g.home===MY||g.away===MY), done=mine.filter(has);
+  if(!done.length){ $('#view-stats').innerHTML=`<p class="note">${esc(T[MY])} stats appear once their first result is in.</p>`; return }
+  const res=done.map(g=>{const home=g.home===MY, f=home?g.home_score:g.away_score, a=home?g.away_score:g.home_score; return {g,f,a,opp:home?g.away:g.home,m:f-a}});
+  const best=[...res].sort((x,y)=>y.m-x.m)[0], worst=[...res].sort((x,y)=>x.m-y.m)[0];
+  const next=mine.find(g=>!has(g)&&new Date(g.game_date+'T23:59')>=new Date());
+  const lg=GAMES.filter(has), lgAvg=lg.length?lg.reduce((s,g)=>s+g.home_score+g.away_score,0)/(lg.length*2):0;
+  const card=(lab,big,sub)=>`<div class="leader"><span>${lab}</span><b>${big}</b><span>${sub}</span></div>`;
+  const line=r=>`${r.f}–${r.a} vs ${esc(T[r.opp])}, ${md(r.g.game_date)}`;
+  $('#view-stats').innerHTML=`<div class="leaders">
+    ${card('Goals for per game',(me.gf/me.gp).toFixed(1),`League average ${lgAvg.toFixed(1)}`)}
+    ${card('Goals against per game',(me.ga/me.gp).toFixed(1),`League average ${lgAvg.toFixed(1)}`)}
+    ${card(best.m>0?'Biggest win':'Best result',(best.m>0?'+':'')+best.m,line(best))}
+    ${card(worst.m<0?'Toughest loss':'Closest game',worst.m,line(worst))}
+    ${next?card('Next game',md(next.game_date)+' · '+esc(next.game_time.replace(' PM','pm')),'vs '+esc(T[next.home===MY?next.away:next.home])):''}
+    ${card('Games left',mine.length-done.length,`of ${mine.length} this session`)}
+  </div>
+  <div class="tablewrap"><table><thead><tr><th>Date</th><th class="t">Opponent</th><th>Result</th><th>Score</th></tr></thead><tbody>${
+    res.map(r=>`<tr><td>${md(r.g.game_date)}</td><td class="t">${esc(T[r.opp])}</td><td><span class="form"><i class="${r.m>0?'W':r.m<0?'L':'T'}">${r.m>0?'W':r.m<0?'L':'T'}</i></span></td><td>${r.f}–${r.a}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function renderTeamHead(){
+  const h=$('#teamHead'); h.hidden=!MY; $('#teamClear').hidden=!MY; $('#teamBtn').classList.toggle('on',!!MY);
+  $('#teamBtnLabel').textContent = MY ? T[MY] : 'All teams';
+  if(!MY) return;
+  const rows=standings(), i=rows.findIndex(x=>x.k===MY), me=rows[i];
+  const ord=n=>{const v=n%100; return n+((v>10&&v<14)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'))};
+  h.innerHTML=`<div class="tn">${esc(T[MY])}<small>${ord(i+1)} of ${rows.length} · ${me.w}-${me.l}-${me.t} · ${me.pts} pts</small></div>
+    <div class="kpis"><div><b>${me.gp}</b><span>Played</span></div><div><b>${me.gf}</b><span>Goals for</span></div><div><b>${me.ga}</b><span>Against</span></div><div><b>${me.gd>0?'+':''}${me.gd}</b><span>Goal diff</span></div></div>
+    <button class="backall" id="backAll">← Back to all teams</button>`;
+  $('#backAll').onclick=()=>setTeam('');
+}
 function renderStats(){
+  if(MY) return renderTeamStats();
   const rows = standings().filter(x=>x.gp), done = GAMES.filter(has);
   if(!done.length){ $('#view-stats').innerHTML='<p class="note">Stats appear once results are entered.</p>'; return }
   const goals = done.reduce((s,g)=>s+g.home_score+g.away_score,0);
@@ -58,14 +91,23 @@ function renderStats(){
     ${top((a,b)=>a.ga/a.gp-b.ga/b.gp,'Best defense',b=>(b.ga/b.gp).toFixed(1)+' GA/gm')}
     <div class="leader"><span>Biggest margin</span><b>${big.home_score}–${big.away_score}</b><span>${esc(T[big.home])} vs ${esc(T[big.away])}, ${md(big.game_date)}</span></div></div>`;
 }
-function render(){ renderSchedule(); renderStandings(); renderStats(); $('#adminPanel').hidden=!ADMIN; $('#loginBtn').classList.toggle('on',ADMIN) }
+function render(){ renderTeamHead(); renderSchedule(); renderStandings(); renderStats(); $('#adminPanel').hidden=!ADMIN; $('#loginBtn').classList.toggle('on',ADMIN) }
 
 function show(tab){ if(!['schedule','standings','stats'].includes(tab)) tab='schedule';
   document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   ['schedule','standings','stats'].forEach(t=>$('#view-'+t).hidden=t!==tab); ls.set('tab',tab) }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.tab));
-const sel=$('#myteam'); Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v;sel.appendChild(o)});
-sel.value=MY; sel.onchange=()=>{MY=sel.value;ls.set('myteam',MY);render()};
+function setTeam(k){ MY=k; ls.set('myteam',MY); $('#teamDlg').open&&$('#teamDlg').close(); render(); window.scrollTo(0,0) }
+function openTeams(){
+  const rows=standings(), rec=Object.fromEntries(rows.map((x,i)=>[x.k,`#${i+1} · ${x.w}-${x.l}-${x.t}`]));
+  $('#teamList').innerHTML=`<button class="all${MY?'':' sel'}" data-k="">All teams<small>Whole league</small></button>`+
+    Object.entries(T).sort((a,b)=>a[1].localeCompare(b[1])).map(([k,v])=>`<button class="${k===MY?'sel':''}" data-k="${k}">${esc(v)}<small>${rec[k]}</small></button>`).join('');
+  $('#teamDlg').showModal();
+}
+$('#teamBtn').onclick=openTeams;
+$('#teamClear').onclick=()=>setTeam('');
+$('#teamDlgClose').onclick=()=>$('#teamDlg').close();
+$('#teamList').onclick=e=>{const b=e.target.closest('[data-k]'); if(b) setTeam(b.dataset.k)};
 const banner = m => { const b=$('#banner'); b.hidden=!m; b.textContent=m||'' };
 
 // ---------- login ----------
