@@ -6,7 +6,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ls = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
 MY = ls.get('myteam') || '';
-const tn = k => `<span class="tl" data-team="${k}">${esc(T[k])}</span>`;
+const tn = k => `<span class="tl" data-team="${k}" role="button" tabindex="0">${esc(T[k])}</span>`;
 const has = g => g.home_score != null && g.away_score != null;
 const md = d => { const [y,m,dd] = d.split('-'); return `${+m}/${+dd}` };
 
@@ -218,11 +218,11 @@ function teamCard(k){
 }
 $('#cardClose').onclick=()=>$('#teamCard').close();
 $('#teamCard').addEventListener('click',e=>{ if(e.target.id==='teamCard') e.target.close() });
-let pressT=null, pressXY=null, pressed=false;
-document.addEventListener('pointerdown',e=>{ const el=e.target.closest('[data-team]'); if(!el) return;
-  pressXY=[e.clientX,e.clientY]; clearTimeout(pressT);
-  pressT=setTimeout(()=>{ pressed=true; if(navigator.vibrate) try{navigator.vibrate(15)}catch(_){}; teamCard(el.dataset.team) },500) });
-document.addEventListener('pointermove',e=>{ if(pressXY&&Math.hypot(e.clientX-pressXY[0],e.clientY-pressXY[1])>10) clearTimeout(pressT) });
-['pointerup','pointercancel','scroll'].forEach(t=>document.addEventListener(t,()=>clearTimeout(pressT),true));
-document.addEventListener('contextmenu',e=>{ const el=e.target.closest('[data-team]'); if(!el) return; e.preventDefault(); if(!pressed){ clearTimeout(pressT); teamCard(el.dataset.team) } pressed=false });
-document.addEventListener('click',e=>{ if(pressed && e.target.closest('[data-team]')){ e.preventDefault(); e.stopPropagation(); pressed=false } },true);
+// Double-tap a team name to open its card
+let lastTap={k:null,t:0};
+document.addEventListener('click',e=>{ const el=e.target.closest('[data-team]'); if(!el) return;
+  const now=Date.now(), k=el.dataset.team;
+  if(lastTap.k===k && now-lastTap.t<400){ e.preventDefault(); lastTap={k:null,t:0}; teamCard(k) }
+  else lastTap={k,t:now};
+});
+document.addEventListener('keydown',e=>{ const el=e.target.closest&&e.target.closest('[data-team]'); if(el&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); teamCard(el.dataset.team) } });
